@@ -18,6 +18,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref } from 'vue';
 import datatalonario from './components/datatalonario.vue';
