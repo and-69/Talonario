@@ -76,7 +76,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
-                                <div class="factura-box">
+                                <div class="factura-box table-responsive-custom">
                                     <table class="table table-bordered text-center">
                                         <thead>
                                             <tr style="background:#1976d2;color:#fff;">
@@ -563,6 +563,23 @@ function getTextColor(bgColor) {
     }
     .card-body {
         font-size: 20px;
+    }
+}
+.table-responsive-custom {
+    width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 600px) {
+    .factura-box {
+        padding: 8px 2px;
+    }
+    .table-responsive-custom table {
+        font-size: 13px;
+        min-width: 400px;
+    }
+    .modal-content {
+        padding: 2px;
     }
 }
 </style>
