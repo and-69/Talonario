@@ -67,6 +67,7 @@
                 <div class="hr"></div>
                 <div class="winner">
                     <button class="btn btn-dark" @click="generarGanador" :style="{background: colorBoton, borderColor: colorBoton}"><i class="bi bi-trophy-fill"></i></button>
+                    <button class="btn btn-dark ms-2" @click="elegirGanadorPersonalizado" :style="{background: colorBoton, borderColor: colorBoton}"><i class="bi bi-person-check"></i></button>
                 </div>
                 <div class="modal fade" id="modalListado" tabindex="-1" aria-labelledby="modalListadoLabel" aria-hidden="true">
                     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -235,6 +236,76 @@ function generarGanador() {
     });
 }
 
+function elegirGanadorPersonalizado() {
+    if (ganadorSorteo.value) {
+        SweetAlert.fire({
+            icon: 'info',
+            title: 'Ya hay un ganador!',
+            html: `<b>${ganadorSorteo.value.nombre}</b><br>Boleta: <b>${ganadorSorteo.value.numero}</b><br>Teléfono: <b>${ganadorSorteo.value.telefono}</b>`,
+            confirmButtonColor: colorHeader.value
+        });
+        return;
+    }
+    
+    if (listadoBoletas.value.length === 0) {
+        SweetAlert.fire({
+            icon: 'info',
+            title: 'No hay boletas adquiridas',
+            text: 'Debe haber al menos una boleta adquirida para elegir ganador.'
+        });
+        return;
+    }
+
+    // Crear lista de números disponibles para el select
+    const opcionesNumeros = listadoBoletas.value.map(boleta => 
+        `<option value="${boleta.numero}">${boleta.numero} - ${boleta.nombre}</option>`
+    ).join('');
+
+    SweetAlert.fire({
+        title: 'Elegir Ganador Personalizado',
+        html: `
+            <label for="numero-ganador" style="display: block; margin-bottom: 10px; font-weight: bold;">Selecciona el número ganador:</label>
+            <select id="numero-ganador" class="swal2-input" style="width: 100%; padding: 10px; font-size: 16px; border: 1.5px solid #601f9e; border-radius: 8px;">
+                <option value="">Seleccionar número...</option>
+                ${opcionesNumeros}
+            </select>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Elegir Ganador',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: colorHeader.value,
+        cancelButtonColor: '#6c757d',
+        customClass: {
+            popup: 'custom-swal-popup',
+            title: 'custom-swal-title',
+            content: 'custom-swal-content'
+        },
+        preConfirm: () => {
+            const numeroSeleccionado = document.getElementById('numero-ganador').value;
+            if (!numeroSeleccionado) {
+                SweetAlert.showValidationMessage('Debes seleccionar un número');
+                return false;
+            }
+            return numeroSeleccionado;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const numeroGanador = result.value;
+            const ganador = listadoBoletas.value.find(boleta => boleta.numero === numeroGanador);
+            
+            if (ganador) {
+                ganadorSorteo.value = ganador;
+                SweetAlert.fire({
+                    icon: 'success',
+                    title: '¡Ganador Elegido!',
+                    html: `<b>${ganador.nombre}</b><br>Boleta: <b>${ganador.numero}</b><br>Teléfono: <b>${ganador.telefono}</b>`,
+                    confirmButtonColor: colorHeader.value
+                });
+            }
+        }
+    });
+}
+
 function actualizarEstado(idx, nuevoEstado) {
     listadoBoletas.value[idx].estado = nuevoEstado;
 }
@@ -275,7 +346,13 @@ function exportarPDF() {
 function getBoletas() {
     const cant = parseInt(props.cantidad);
     if (!cant || isNaN(cant)) return [];
-    return Array.from({ length: cant + 1 }, (_, i) => i);
+    
+    // Determinar el número de dígitos necesarios
+    const digitos = cant.toString().length;
+    
+    return Array.from({ length: cant + 1 }, (_, i) => {
+        return i.toString().padStart(digitos, '0');
+    });
 }
 
 const boletas = computed(getBoletas);
@@ -581,5 +658,69 @@ function getTextColor(bgColor) {
     .modal-content {
         padding: 2px;
     }
+}
+
+/* Estilos personalizados para SweetAlert - Modal de ganador personalizado */
+:deep(.custom-swal-popup) {
+    border: 2px solid #601f9e !important;
+    border-radius: 18px !important;
+    box-shadow: 0 4px 24px rgba(96, 31, 158, 0.18) !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    padding: 0 !important;
+}
+
+:deep(.custom-swal-popup .swal2-header) {
+    background: #601f9e !important;
+    color: #fff !important;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    padding: 20px !important;
+    margin: 0 !important;
+}
+
+:deep(.custom-swal-title) {
+    color: #fff !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: bold !important;
+    font-size: 2rem !important;
+    margin: 0 !important;
+    background: #601f9e !important;
+    padding: 20px !important;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+}
+
+:deep(.custom-swal-content) {
+    font-family: 'Courier New', Courier, monospace !important;
+    color: #222 !important;
+    background: #fff !important;
+    padding: 18px 20px !important;
+    margin: 0 !important;
+}
+
+:deep(.swal2-actions) {
+    background: #f7f7fa !important;
+    border-bottom-left-radius: 16px !important;
+    border-bottom-right-radius: 16px !important;
+    border-top: 1px solid #601f9e !important;
+    padding: 15px 20px !important;
+    margin: 0 !important;
+}
+
+:deep(.swal2-confirm) {
+    background: #601f9e !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-weight: bold !important;
+    font-size: 1.2rem !important;
+    padding: 12px 24px !important;
+    border-radius: 10px !important;
+    border: none !important;
+}
+
+:deep(.swal2-cancel) {
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 1.2rem !important;
+    padding: 12px 24px !important;
+    border-radius: 10px !important;
 }
 </style>
